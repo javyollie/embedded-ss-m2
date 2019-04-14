@@ -73,12 +73,16 @@ ARCHFLAGS = -mcpu=$(CPU) -m$(ARCH) -march=$(VER) -mfloat-abi=$(TYPE) -mfpu=$(FPU
 # Output Files Defines
 OBJSPREPROC = $(SOURCES:.c=.i)
 OBJSASM = $(SOURCES:.c=.asm)
+OBJDEP = $(SOURCES:.c=.d)
+OBJSIZE = $(SOURCES:.c=.size)
 OBJS = $(SOURCES:.c=.o)
 TARGETASM = $(TARGET).asm
 
 # Pattern Matching Rules to Generate Individual Files
+
 %.o : %.c
-	$(CC) -c $< $(CFLAGS) $(CPPFLAGS) -o $@
+	$(CC) -c $< $(CFLAGS) $(CPPFLAGS) -MD -o $@
+	size -d $@ > $*.size
 
 %.i : %.c
 	$(CC) -c $< $(CFLAGS) $(CPPFLAGS) -E -o $@
@@ -97,7 +101,7 @@ build: $(TARGET).out
 
 $(TARGET).out: $(OBJS)
 	$(CC) $(OBJS) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@
-
+	size -d $(TARGET).out > $(TARGET).size
 .PHONY: clean
 clean:
-	rm -f $(OBJS) $(OBJSASM) $(OBJSPREPROC) $(TARGET).out $(TARGET).map $(TARGETASM)
+	rm -f $(OBJS) $(OBJSIZE) $(OBJDEP) $(OBJSASM) $(OBJSPREPROC) $(TARGET).out $(TARGET).map $(TARGETASM) $(TARGET).size
