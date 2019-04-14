@@ -31,10 +31,10 @@ ifeq ($(PLATFORM),HOST)
 else
 	CC = $(CROSSCC)
 	PLATFORMFLAGS = $(MSP432FLAGS)
+	LINKER_FILE = -T ../msp432p401r.lds
 endif
 
 # Architectures Specific Flags
-LINKER_FILE = ../msp432p401r.lds
 CPU = cortex-m4 
 ARCH = thumb
 VER = armv7e-m
@@ -46,28 +46,38 @@ SPECS = nosys.specs
 NATIVECC = gcc
 CROSSCC = arm-none-eabi-gcc
 TARGET = c1m2
-LDFLAGS = -Wl,-Map=$(TARGET).map -T $(LINKER_FILE) 
+LDFLAGS = -Wl,-Map=$(TARGET).map $(LINKER_FILE) 
 CFLAGS = -Wall -Werror -g -O0 -std=c99 
 HOSTFLAG = -DHOST
 MSP432FLAGS = $(ARCHFLAGS) -DMSP432
 CPPFLAGS = $(INCLUDE) $(PLATFORMFLAGS)
 ARCHFLAGS = -mcpu=$(CPU) -m$(ARCH) -march=$(VER) -mfloat-abi=$(TYPE) -mfpu=$(FPU) --specs=$(SPECS) 
 
-
+OBJSPREPROC = $(SOURCES:.c=.i)
+OBJSASM = $(SOURCES:.c=.asm)
 OBJS = $(SOURCES:.c=.o)
-
+TARGETASM = $(TARGET).asm
 %.o : %.c
 	$(CC) -c $< $(CFLAGS) $(CPPFLAGS) -o $@
 
-.PHONY: build
-build: all
+%.i : %.c
+	$(CC) -c $< $(CFLAGS) $(CPPFLAGS) -E -o $@
 
-.PHONY: all
-all: $(TARGET).out
+%.asm : %.c
+	$(CC) -c $< $(CFLAGS) $(CPPFLAGS) -S -o $@
+
+%.asm : %.out 
+	objdump -D $< > $@
+
+.PHONY: compile-all
+compile-all: $(OBJS) 
+
+.PHONY: build
+build: $(TARGET).out
 
 $(TARGET).out: $(OBJS)
 	$(CC) $(OBJS) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@
 
 .PHONY: clean
 clean:
-	rm -f $(OBJS) $(TARGET).out $(TARGET).map
+	rm -f $(OBJS) $(OBJSASM) $(OBJSPREPROC) $(TARGET).out $(TARGET).map $(TARGETASM)
