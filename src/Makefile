@@ -15,10 +15,25 @@
 # Use: make [TARGET] [PLATFORM-OVERRIDES]
 #
 # Build Targets:
-#      <Put a description of the supported targets here>
-#
+#      <FILE>.i - Generates the preprocessed output of all c-program
+#      implemention files.
+#      
+#      <FILE>.asm - Generates assembly output of c-program implementation files
+#      and the final output executable
+#      
+#      <FILE>.o - Generates the object file for all c-source files (but do not
+#      link) by specifying the object file you want to compile
+#      
+#      compile-all - Compile all object files (NO LINKING w/ .PHONY protection)
+#      
+#      build - Compile all object files and link into a final executable
+#      (w/ .PHONY protection)
+#      
+#      clean - Removes all compiled objects, preprocessed outputs, assembly
+#      outputs, executable files and build output files (w/ .PHONY protection)
+#      
 # Platform Overrides:
-#      <Put a description of the supported Overrides here
+#      PLATFORM - Support for two target platforms (HOST, MSP432)
 #
 #------------------------------------------------------------------------------
 include sources.mk
@@ -27,7 +42,6 @@ include sources.mk
 ifeq ($(PLATFORM),HOST)
 	CC = $(NATIVECC)
 	PLATFORMFLAGS = $(HOSTFLAG)
-	LINKER_FILE = 
 else
 	CC = $(CROSSCC)
 	PLATFORMFLAGS = $(MSP432FLAGS)
@@ -53,10 +67,13 @@ MSP432FLAGS = $(ARCHFLAGS) -DMSP432
 CPPFLAGS = $(INCLUDE) $(PLATFORMFLAGS)
 ARCHFLAGS = -mcpu=$(CPU) -m$(ARCH) -march=$(VER) -mfloat-abi=$(TYPE) -mfpu=$(FPU) --specs=$(SPECS) 
 
+# Output Files Defines
 OBJSPREPROC = $(SOURCES:.c=.i)
 OBJSASM = $(SOURCES:.c=.asm)
 OBJS = $(SOURCES:.c=.o)
 TARGETASM = $(TARGET).asm
+
+# Pattern Matching Rules to Generate Individual Files
 %.o : %.c
 	$(CC) -c $< $(CFLAGS) $(CPPFLAGS) -o $@
 
