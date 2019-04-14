@@ -42,10 +42,12 @@ include sources.mk
 ifeq ($(PLATFORM),HOST)
 	CC = $(NATIVECC)
 	PLATFORMFLAGS = $(HOSTFLAG)
+	OBJDUMP = $(ODUMP)
 else
 	CC = $(CROSSCC)
 	PLATFORMFLAGS = $(MSP432FLAGS)
 	LINKER_FILE = -T ../msp432p401r.lds
+	OBJDUMP = arm-none-eabi-$(ODUMP)
 endif
 
 # Architectures Specific Flags
@@ -59,6 +61,7 @@ SPECS = nosys.specs
 # Compiler Flags and Defines
 NATIVECC = gcc
 CROSSCC = arm-none-eabi-gcc
+ODUMP = objdump
 TARGET = c1m2
 LDFLAGS = -Wl,-Map=$(TARGET).map $(LINKER_FILE) 
 CFLAGS = -Wall -Werror -g -O0 -std=c99 
@@ -84,7 +87,7 @@ TARGETASM = $(TARGET).asm
 	$(CC) -c $< $(CFLAGS) $(CPPFLAGS) -S -o $@
 
 %.asm : %.out 
-	objdump -D $< > $@
+	$(OBJDUMP) -D $< > $@
 
 .PHONY: compile-all
 compile-all: $(OBJS) 
